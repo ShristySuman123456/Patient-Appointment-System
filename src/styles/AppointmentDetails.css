@@ -1,0 +1,11 @@
+.appointment-details-container {
+    padding: 20px;
+  }
+  
+  .appointment-details-container h2 {
+    margin-bottom: 20px;
+  }
+  
+  .appointment-details-container p {
+    margin: 10px 0;
+  }
