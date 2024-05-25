@@ -1,13 +1,32 @@
 from sqlalchemy.orm import Session
 from models import Patient,Appointment 
 from database import SessionLocal
+from models import User
+from passlib.context import CryptContext
 import models, schemas
+
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def get_user_by_email(db: Session, email: str):
+    return db.query(models.User).filter(models.User.email == email).first()
+
+def create_user(db: Session, user: schemas.UserCreate):
+    db_user = models.User(email=user.email, hashed_password=user.password, username=user.username)
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
 
 def get_patient(db: Session, patient_id: int):
     return db.query(Patient).filter(Patient.id == patient_id).first()
 
 def get_all_patients(db: Session):
     return db.query(Patient).all()
+
+def get_appointment(db: Session, patient_id: int):
+    return db.query(Appointment).filter(Appointment.patient_id == patient_id).first()
+
 
 def get_all_appointments(db: Session):
     return db.query(models.Appointment).all()

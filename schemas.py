@@ -1,6 +1,24 @@
-from pydantic import BaseModel
+from pydantic import BaseModel,EmailStr
 from datetime import date, time, datetime
 from typing import Optional
+
+class UserBase(BaseModel):
+    email: EmailStr
+
+class UserCreate(UserBase):
+    password: str
+    username: Optional[str] = None
+
+class UserLogin(UserBase):
+    email: EmailStr
+    password: str
+
+class User(UserBase):
+    id: int
+    username: Optional[str] = None
+
+    class Config:
+        orm_mode = True
 
 class PatientBase(BaseModel):
     name: str
@@ -50,7 +68,7 @@ class PaymentCreate(PaymentBase):
     pass
 
 class PaymentUpdate(PaymentBase):
-    status: Optional[str]
+    pass
 
 class Payment(PaymentBase):
     payment_method_id: int
