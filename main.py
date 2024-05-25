@@ -1,15 +1,26 @@
-from fastapi import FastAPI, Depends,Query, HTTPException
+import os
+from fastapi import FastAPI, Depends,Query, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from crud import get_all_patients 
+from passlib.context import CryptContext
 import uvicorn
 import stripe
-from schemas import Payment 
+import jwt
+from dotenv import load_dotenv 
+from datetime import datetime, timedelta
 from typing import List,Optional
 from database import SessionLocal, engine
 import crud, models, database, schemas
+from datetime import datetime, timedelta
 
 stripe.api_key = "pk_test_51PEuDgSIqyVgoIp05WEc6gWU8Vi1yVbEPV7bdDG5K7Gi1XvuEElrKlTyoJIH78YUO1IUTEisywlVS9FrAhJHXmOx00OEaxhpTs"
+SECRET_KEY = os.getenv("SECRET_KEY")
+    
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 app = FastAPI()
 
 origins = ["*"]
@@ -19,7 +30,7 @@ app.add_middleware(
     allow_origins=["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE"],
-    allow_headers=["*"],
+    allow_headers=["*"]
 )
 
 # Dependency to get database session
@@ -33,6 +44,47 @@ def get_db():
         db.close()
 
 models.Base.metadata.create_all(bind=engine)
+
+def verify_password(plain_password, hashed_password):
+    return pwd_context.verify(plain_password, hashed_password)
+
+def get_password_hash(password):
+    return pwd_context.hash(password)
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    if expires_delta:
+        expire = datetime.utcnow() + expires_delta
+    else:
+        expire = datetime.utcnow() + timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt
+
+@app.post("/signup", response_model=schemas.User)
+def signup(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    db_user = crud.get_user_by_email(db, email=user.email)
+    if db_user:
+        raise HTTPException(status_code=400, detail="Email already registered")
+    hashed_password = get_password_hash(user.password)
+    user.password = hashed_password
+    new_user = crud.create_user(db, user)
+    return new_user
+
+@app.post("/login")
+async def login(user: schemas.UserLogin, db: Session = Depends(get_db)):
+    db_user = crud.get_user_by_email(db, email=user.email)
+    if not db_user or not verify_password(user.password, db_user.hashed_password):
+        raise HTTPException(status_code=400, detail="Invalid email or password")
+    
+    access_token = create_access_token(data={"sub": db_user.email})
+    return {"access_token": access_token, "token_type": "bearer"}
+
+@app.post("/logout")
+def logout():
+    # This could be used to invalidate tokens or perform other logout operations
+    return {"message": "Successfully logged out"}
+
 
 @app.post("/patients/", response_model=schemas.Patient)
 def create_patient(patient: schemas.PatientCreate, db: Session = Depends(get_db)):
