@@ -85,9 +85,9 @@ const Update_Patient = () => {
         </div>
         <div className="form-group">
           <label>Gender:</label>
-          <input type="radio" name="female" value={patientData.gender} onChange={handleChange} required />Female
-          <input type="radio" name="male" value={patientData.gender} onChange={handleChange} required />Male
-          <input type="radio" name="others" value={patientData.gender} onChange={handleChange} required />Others
+          <input type="radio" name="female" value={patientData.gender} onChange={handleChange}  />Female
+          <input type="radio" name="male" value={patientData.gender} onChange={handleChange}  />Male
+          <input type="radio" name="others" value={patientData.gender} onChange={handleChange}  />Others
         </div>
         <div className="form-group">
           <label>Mobile:</label>

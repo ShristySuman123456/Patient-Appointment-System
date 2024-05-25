@@ -16,7 +16,7 @@ p {
   justify-content: center;
   align-items: center;
   margin-left: -20px;
-    margin-right: -20px;
+  margin-right: -20px;
 }
 
 .hero {
@@ -57,4 +57,5 @@ p {
   text-align: center;
   padding: 160px 15px;
 }
+
 

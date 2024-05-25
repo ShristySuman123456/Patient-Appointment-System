@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import '../styles/Appointment_Form.css'; // Import the CSS file
+import axios from 'axios';
+import '../styles/Appointment_Form.css'; 
 
 const Appointment_Details = () => {
-  const { patient_id } = useParams(); // Capture the patientId from the URL
+  const { patient_id } = useParams(); 
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState('');
